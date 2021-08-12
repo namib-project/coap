@@ -24,6 +24,7 @@ class CoapMessageDecoder18 extends CoapMessageDecoder {
     _type = _reader!.read(CoapDraft18.typeBits);
     _tokenLength = _reader!.read(CoapDraft18.tokenLengthBits);
     _code = _reader!.read(CoapDraft18.codeBits);
+    //SJH check the id first time round against second time
     _id = _reader!.read(CoapDraft18.idBits);
   }
 

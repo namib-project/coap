@@ -14,11 +14,15 @@ FutureOr main() async {
     port: conf1.defaultPort,
   );
 
+  print('ISSUE - Ping Client1');
   final client1 = CoapClient(uri1, conf1);
   final firstPingResponse = await client1.ping(10000);
+  if (firstPingResponse) {
+    print('ISSUE - Client1 Ping response OK ');
+  } else {
+    print('ISSUE  - Client1 Ping failed');
+  }
   client1.close();
-  // This works
-  print(firstPingResponse);
 
   final uri2 = Uri(
     scheme: 'coap',
@@ -26,9 +30,13 @@ FutureOr main() async {
     port: conf2.defaultPort,
   );
 
+  print('ISSUE - Ping Client2');
   final client2 = CoapClient(uri2, conf2);
   final secondPingResponse = await client2.ping(10000);
+  if (secondPingResponse) {
+    print('ISSUE - Client2 Ping response OK ');
+  } else {
+    print('ISSUE  - Client2 Ping failed');
+  }
   client2.close();
-
-  print(secondPingResponse);
 }
