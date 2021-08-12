@@ -12,7 +12,7 @@ class CoapConfig extends DefaultCoapConfig {
   }
 
   @override
-  CoapISpec? spec;
+  CoapISpec? spec = CoapDraft18();
 
   @override
   String get version => 'RFC7252';
