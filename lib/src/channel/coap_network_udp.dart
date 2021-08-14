@@ -39,6 +39,9 @@ class CoapNetworkUDP implements CoapINetwork {
   /// UDP socket
   RawDatagramSocket? get socket => _socket;
 
+  /// Listener
+  StreamSubscription<RawSocketEvent>? _listener;
+
   @override
   int send(typed.Uint8Buffer data) {
     try {
@@ -57,7 +60,7 @@ class CoapNetworkUDP implements CoapINetwork {
   @override
   void receive() {
     try {
-      _socket?.listen((RawSocketEvent e) {
+      _listener = _socket?.listen((RawSocketEvent e) {
         switch (e) {
           case RawSocketEvent.read:
             final d = _socket?.receive();
@@ -112,6 +115,7 @@ class CoapNetworkUDP implements CoapINetwork {
   @override
   void close() {
     _log!.info('Network UDP - closing ${address!.address.host}, port $port');
+    _listener?.cancel();
     _socket?.close();
     _data.close();
   }
