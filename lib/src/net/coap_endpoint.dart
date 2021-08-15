@@ -93,6 +93,9 @@ class CoapEndPoint implements CoapIEndPoint, CoapIOutbox {
 
   void _receiveData(CoapDataReceivedEvent event) {
     // Return if we have no data, should not happen but be defensive
+    if (event.data.isEmpty) {
+      return;
+    }
     final decoder = config!.spec!.newMessageDecoder(event.data);
     if (decoder.isRequest) {
       CoapRequest? request;
@@ -153,10 +156,14 @@ class CoapEndPoint implements CoapIEndPoint, CoapIOutbox {
           _log!.debug('Responding to ping by ${event.address}');
           _reject(message);
         } else {
-          final exchange = _matcher.receiveEmptyMessage(message);
-          if (exchange != null) {
-            exchange.endpoint = this;
-            _coapStack.receiveEmptyMessage(exchange, message);
+          if (message.type != CoapMessageType.rst) {
+            final exchange = _matcher.receiveEmptyMessage(message);
+            if (exchange != null) {
+              exchange.endpoint = this;
+              _coapStack.receiveEmptyMessage(exchange, message);
+            }
+          } else {
+            _log!.debug('RST received from ping request');
           }
         }
       }

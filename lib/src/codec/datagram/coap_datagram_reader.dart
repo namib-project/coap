@@ -78,7 +78,7 @@ class CoapDatagramReader {
   typed.Uint8Buffer readBytesLeft() => readBytes(-1);
 
   void _readCurrentByte() {
-    final val = _buffer!.isNotEmpty ? _buffer!.removeAt(0) : 0;
+    final val = _buffer!.removeAt(0);
 
     if (val >= 0) {
       _currentByte.setUint8(0, val);

@@ -32,7 +32,7 @@ FutureOr main() async {
 
   print('ISSUE - Ping Client2');
   final client2 = CoapClient(uri2, conf2);
-  final secondPingResponse = await client2.ping(10000);
+  final secondPingResponse = await client2.ping(20000);
   if (secondPingResponse) {
     print('ISSUE - Client2 Ping response OK ');
   } else {
