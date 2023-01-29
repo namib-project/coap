@@ -699,30 +699,38 @@ class CoapClient {
     }
   }
 
+  Future<Endpoint> _initializeEndpoint() async {
+    final endpoint = _endpoint;
+    if (endpoint != null) {
+      return endpoint;
+    }
+
+    final destination = await _lookupHost(uri.host, addressType);
+    final socket = CoapINetwork.fromUri(
+      uri,
+      address: destination,
+      bindAddress: bindAddress,
+      config: _config,
+      namespace: _eventBus.namespace,
+      pskCredentialsCallback: _pskCredentialsCallback,
+    );
+
+    await socket.init();
+    final initializedEndpoint =
+        Endpoint(socket, _config, namespace: _eventBus.namespace)..start();
+
+    _endpoint = initializedEndpoint;
+    return initializedEndpoint;
+  }
+
   Future<void> _prepare(final CoapRequest request) async {
     request
       ..timestamp = DateTime.now()
       ..eventBus = _eventBus;
 
     await _lock.synchronized(() async {
-      // Set endpoint if missing
-      if (_endpoint == null) {
-        final destination = await _lookupHost(uri.host, addressType);
-        final socket = CoapINetwork.fromUri(
-          uri,
-          address: destination,
-          bindAddress: bindAddress,
-          config: _config,
-          namespace: _eventBus.namespace,
-          pskCredentialsCallback: _pskCredentialsCallback,
-        );
-        await socket.init();
-        _endpoint = Endpoint(socket, _config, namespace: _eventBus.namespace);
-        _endpoint!.start();
-      }
+      request.endpoint = await _initializeEndpoint();
     });
-
-    request.endpoint = _endpoint;
   }
 
   Future<InternetAddress> _lookupHost(
