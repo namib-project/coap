@@ -7,7 +7,6 @@
 
 //
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:convert/convert.dart';
@@ -210,14 +209,6 @@ abstract class CoapMessage {
   /// Gets a value that indicates whether this CoAP message is
   /// an empty message.
   bool get isEmpty => code.isEmpty;
-
-  /// The destination endpoint.
-  @internal
-  InternetAddress? destination;
-
-  /// The source endpoint.
-  @internal
-  InternetAddress? source;
 
   /// Acknowledged hook for attaching a callback if needed
   HookFunction? acknowledgedHook;

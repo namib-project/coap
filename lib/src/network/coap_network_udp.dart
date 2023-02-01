@@ -51,7 +51,7 @@ class CoapNetworkUDP implements CoapINetwork {
 
     _socket!.send(
       coapMessage.toUdpPayload(),
-      coapMessage.destination ?? address,
+      address,
       port,
     );
   }

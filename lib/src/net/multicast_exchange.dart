@@ -18,9 +18,10 @@ class CoapMulticastExchange extends CoapExchange {
 
   final List<CoapResponse> responses = [];
 
+  // ignore: prefer_expression_function_bodies
   bool alreadyReceived(final CoapResponse response) {
     final filteredResponses = responses.where(
-      (final element) => element.source?.address == response.source?.address,
+      (final element) => element.source == response.source,
     );
 
     return filteredResponses.isNotEmpty;

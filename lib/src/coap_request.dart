@@ -54,7 +54,8 @@ class CoapRequest extends CoapMessage {
   }
 
   /// Indicates whether this request is a multicast request or not.
-  bool get isMulticast => destination?.isMulticast ?? false;
+  bool get isMulticast =>
+      InternetAddress.tryParse(uriHost)?.isMulticast ?? false;
 
   String? scheme = 'coap';
 
@@ -66,7 +67,7 @@ class CoapRequest extends CoapMessage {
   ///
   /// [RFC 7252, Section 5.10.1]: https://www.rfc-editor.org/rfc/rfc7252#section-5.10.1
   Uri get uri {
-    final host = getFirstOption<UriHostOption>()?.value ?? destination?.address;
+    final host = getFirstOption<UriHostOption>()?.value;
     final path = getOptions<UriPathOption>()
         .map((final option) => option.pathSegment)
         .join();
@@ -213,7 +214,6 @@ class CoapRequest extends CoapMessage {
   @internal
   set endpoint(final Endpoint? endpoint) {
     super.id = endpoint!.nextMessageId;
-    super.destination = endpoint.destination;
     _endpoint = endpoint;
   }
 

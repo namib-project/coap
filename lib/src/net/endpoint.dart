@@ -111,8 +111,6 @@ class Endpoint {
       return;
     }
 
-    message.source = event.address;
-
     if (message is CoapRequest) {
       final request = message;
       _eventBus.fire(CoapReceivingRequestEvent(request));

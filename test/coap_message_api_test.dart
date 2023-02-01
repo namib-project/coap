@@ -29,8 +29,6 @@ void main() {
     expect(message.optionsLength == 0, isTrue);
     expect(message.token, isNull);
     expect(message.tokenString, '');
-    expect(message.destination, isNull);
-    expect(message.source, isNull);
     expect(message.isAcknowledged, isFalse);
     expect(message.acknowledgedHook, isNull);
     expect(message.isRejected, isFalse);
@@ -436,7 +434,7 @@ void main() {
     );
 
     final message5 = CoapRequest(RequestMethod.get)
-      ..destination = InternetAddress('198.51.100.1')
+      ..uriHost = InternetAddress('198.51.100.1').address
       ..uriPort = 61616
       ..addUriPath('')
       ..addUriPath('/')

@@ -241,7 +241,6 @@ class _ReregistrationContext {
         ..observe = ObserveRegistration.register.value
         // Use same Token
         ..token = request.token
-        ..destination = request.destination
         ..copyEventHandler(request);
       _exchange.fireReregistering(refresh);
       _reregister(refresh);

@@ -5,6 +5,8 @@
  * Copyright :  S.Hamblett
  */
 
+import 'dart:io';
+
 import 'package:typed_data/typed_data.dart';
 
 import '../../coap_code.dart';
@@ -25,7 +27,10 @@ import 'message_format.dart' as message_format;
 /// Returns the deserialized message, or `null` if the message can not be
 /// decoded, i.e. the bytes do not represent a [CoapRequest], a [CoapResponse]
 /// or a [CoapEmptyMessage].
-CoapMessage? deserializeUdpMessage(final Uint8Buffer data) {
+CoapMessage? deserializeUdpMessage(
+  final Uint8Buffer data, {
+  final InternetAddress? source,
+}) {
   final reader = DatagramReader(data);
   var hasFormatError = false;
 
@@ -165,6 +170,7 @@ CoapMessage? deserializeUdpMessage(final Uint8Buffer data) {
       hasUnknownCriticalOption: hasUnknownCriticalOption,
       hasFormatError: hasFormatError,
       contentFormat: contentFormat,
+      source: source,
     );
   } else if (code.isEmpty) {
     return CoapEmptyMessage.fromParsed(

@@ -330,9 +330,7 @@ class BlockwiseLayer extends BaseLayer {
             ..endpoint = request.endpoint
             // NON could make sense over SMS or similar transports
             ..setOptions(request.getAllOptions())
-            ..setOption(nextBlock)
-            ..destination = response.source
-            ..uriHost = response.source?.host ?? '';
+            ..setOption(nextBlock);
           if (exchange is CoapMulticastExchange) {
             status = _copyBlockStatus(
               exchange.responseBlockStatus,
@@ -427,7 +425,6 @@ class BlockwiseLayer extends BaseLayer {
     final block = CoapRequest(request.method, payload: payloadSlice)
       ..endpoint = request.endpoint
       ..setOptions(request.getAllOptions())
-      ..destination = request.destination
       ..token = request.token;
 
     final m = to < request.payload.length;
@@ -469,7 +466,6 @@ class BlockwiseLayer extends BaseLayer {
     // The assembled request will contain the options of the last block
     message
       ..id = last.id
-      ..source = last.source
       ..token = last.token
       ..setOptions(last.getAllOptions());
   }
@@ -508,7 +504,6 @@ class BlockwiseLayer extends BaseLayer {
       block = response;
     } else {
       block = CoapResponse(response.responseCode, response.type)
-        ..destination = response.destination
         ..token = response.token
         ..setOptions(response.getAllOptions())
         ..isTimedOut = true;

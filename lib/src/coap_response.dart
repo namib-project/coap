@@ -5,6 +5,8 @@
  * Copyright :  S.Hamblett
  */
 
+import 'dart:io';
+
 import 'package:meta/meta.dart';
 import 'package:typed_data/typed_buffers.dart';
 
@@ -24,6 +26,7 @@ class CoapResponse extends CoapMessage {
     this.responseCode,
     final CoapMessageType type, {
     super.payload,
+    this.source,
   }) : super(
           responseCode.coapCode,
           type,
@@ -38,6 +41,9 @@ class CoapResponse extends CoapMessage {
 
   /// The initial multicast token, used for matching responses
   Uint8Buffer? get multicastToken => _multicastToken;
+
+  final InternetAddress? source;
+
   @internal
   set multicastToken(final Uint8Buffer? val) => _multicastToken = val;
 
@@ -72,9 +78,9 @@ class CoapResponse extends CoapMessage {
     final ResponseCode statusCode,
     final CoapMessageType type, {
     final Iterable<int>? payload,
+    final InternetAddress? source,
   }) =>
-      CoapResponse(statusCode, type, payload: payload)
-        ..destination = request.source
+      CoapResponse(statusCode, type, payload: payload, source: source)
         ..token = request.token;
 
   CoapResponse.fromParsed(
@@ -86,6 +92,7 @@ class CoapResponse extends CoapMessage {
     required final Uint8Buffer? payload,
     required final bool hasUnknownCriticalOption,
     required final bool hasFormatError,
+    this.source,
     super.contentFormat,
   }) : super.fromParsed(
           responseCode.coapCode,

@@ -73,7 +73,6 @@ class CoapObserveClientRelation extends Stream<CoapResponse> {
     ..observe = ObserveRegistration.deregister.value
     // Use same Token
     ..token = _request.token
-    ..destination = _request.destination
 
     // Dispatch final response to the same message observers
     ..copyEventHandler(_request);

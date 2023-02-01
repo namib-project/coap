@@ -131,7 +131,6 @@ class CoapExchange {
   /// Sends the specified response over the same endpoint
   /// as the request has arrived.
   void sendResponse(final CoapResponse resp) {
-    resp.destination = request.source;
     response = resp;
     endpoint.sendEpResponse(this, resp);
   }
