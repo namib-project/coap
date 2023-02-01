@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
+import 'package:convert/convert.dart';
 import 'package:meta/meta.dart';
 import 'package:typed_data/typed_data.dart';
 
@@ -27,7 +28,6 @@ import 'option/integer_option.dart';
 import 'option/opaque_option.dart';
 import 'option/option.dart';
 import 'option/string_option.dart';
-import 'util/coap_byte_array_util.dart';
 
 typedef HookFunction = void Function();
 
@@ -36,21 +36,28 @@ typedef HookFunction = void Function();
 /// each of which has a MessageType, a message identifier,
 /// a token (0-8 bytes), a collection of Options and a payload.
 abstract class CoapMessage {
-  CoapMessage(this.code, this._type);
+  CoapMessage(
+    this.code,
+    this._type, {
+    this.id,
+    final Iterable<int>? payload,
+    this.contentFormat,
+    this.maxRetransmit,
+  }) : payload = payload ?? [];
 
   CoapMessage.fromParsed(
     this.code,
     this._type, {
-    required final int id,
+    required this.id,
     required final Uint8Buffer token,
     required final List<Option<Object?>> options,
-    required final Uint8Buffer? payload,
     required this.hasUnknownCriticalOption,
     required this.hasFormatError,
-  }) {
-    this.id = id;
+    this.contentFormat,
+    final Iterable<int>? payload,
+    this.maxRetransmit,
+  }) : payload = payload ?? [] {
     this.token = token;
-    this.payload = payload ?? [];
     setOptions(options);
   }
 
@@ -72,12 +79,16 @@ abstract class CoapMessage {
   /// The codestring
   String get codeString => code.toString();
 
-  int? _id;
-
   /// The ID of this CoAP message.
-  int? get id => _id;
-  @internal
-  set id(final int? val) => _id = val;
+  int? id;
+
+  /// The content-format of this CoAP message,
+  ///
+  /// Same as [contentType], only another name.
+  final CoapMediaType? contentFormat;
+
+  /// Alias for [contentFormat].
+  CoapMediaType? get contentType => contentFormat;
 
   final List<Option<Object?>> _options = [];
 
@@ -129,10 +140,19 @@ abstract class CoapMessage {
 
   /// Gets all options of the given type.
   List<T> getOptions<T extends Option<Object?>>() =>
-      _options.whereType<T>().toList();
+      getAllOptions().whereType<T>().toList();
 
   /// Gets a list of all options.
-  List<Option<Object?>> getAllOptions() => _options.toList();
+  List<Option<Object?>> getAllOptions() {
+    final options = _options.toList();
+
+    final numericContentFormat = contentFormat?.numericValue;
+    if (numericContentFormat != null) {
+      options.add(ContentFormatOption(numericContentFormat));
+    }
+
+    return options;
+  }
 
   /// Sets an option, removing all others of the option type
   void setOption<T extends Option<Object?>>(final T option) {
@@ -167,7 +187,7 @@ abstract class CoapMessage {
   /// As a string
   String get tokenString {
     final token = _token;
-    return token != null ? CoapByteArrayUtil.toHexString(token) : '';
+    return token != null ? hex.encode(token) : '';
   }
 
   set token(final Uint8Buffer? value) {
@@ -288,7 +308,7 @@ abstract class CoapMessage {
   /// A value of 0 means that the CoapConstants.maxRetransmit time
   /// shoud be taken into account, while a negative means NO retransmission.
   /// The default value is 0.
-  int maxRetransmit = 0;
+  final int? maxRetransmit;
 
   /// The amount of time in milliseconds after which this message will time out.
   /// A value of 0 indicates that the time should be decided
@@ -296,54 +316,23 @@ abstract class CoapMessage {
   /// The default value is 0.
   int ackTimeout = 0;
 
-  final Uint8Buffer _payload = Uint8Buffer();
-
   /// The payload of this CoAP message.
-  Uint8Buffer get payload => _payload;
-
-  set payload(final Iterable<int> payload) => _payload
-    ..clear()
-    ..addAll(payload);
-
-  /// The size of the payload of this CoAP message.
-  int get payloadSize => payload.length;
+  // TODO(JKRhb): Make final
+  Iterable<int> payload;
 
   /// The payload of this CoAP message in string representation.
+  ///
+  /// If the payload is no valid UTF-8, a hex-encoded string will be returned
+  /// instead.
   String get payloadString {
-    final payload = this.payload;
     if (payload.isNotEmpty) {
       try {
-        final ret = utf8.decode(payload);
-        return ret;
+        return utf8.decode(payload.toList());
       } on FormatException catch (_) {
-        // The payload may be incomplete, if so and the conversion
-        // fails indicate this.
-        return '<<<< Payload incomplete >>>>>';
+        return hex.encode(payload.toList());
       }
     }
     return '';
-  }
-
-  /// Sets the payload from a string with a default media type
-  set payloadString(final String value) =>
-      setPayloadMedia(value, CoapMediaType.textPlain);
-
-  /// Sets the payload.
-  void setPayload(final String payload) => this.payload = utf8.encode(payload);
-
-  /// Sets the payload and media type of this CoAP message.
-  void setPayloadMedia(final String payload, [final CoapMediaType? mediaType]) {
-    setPayload(payload);
-    contentType = mediaType;
-  }
-
-  /// Sets the payload of this CoAP message.
-  void setPayloadMediaRaw(
-    final Uint8Buffer payload, [
-    final CoapMediaType? mediaType,
-  ]) {
-    this.payload = payload;
-    contentType = mediaType;
   }
 
   /// If-Matches.
@@ -415,30 +404,6 @@ abstract class CoapMessage {
     removeOption(option);
   }
 
-  /// Content type
-  CoapMediaType? get contentType {
-    final opt = getFirstOption<ContentFormatOption>();
-    if (opt == null) {
-      return null;
-    }
-
-    return CoapMediaType.fromIntValue(opt.value);
-  }
-
-  set contentType(final CoapMediaType? value) {
-    if (value == null) {
-      removeOptions<ContentFormatOption>();
-    } else {
-      setOption(ContentFormatOption(value.numericValue));
-    }
-  }
-
-  /// The content-format of this CoAP message,
-  /// Same as ContentType, only another name.
-  CoapMediaType? get contentFormat => contentType;
-
-  set contentFormat(final CoapMediaType? value) => contentType = value;
-
   /// The max-age of this CoAP message.
   int? get maxAge {
     final opt = getFirstOption<MaxAgeOption>();
@@ -450,24 +415,6 @@ abstract class CoapMessage {
       removeOptions<MaxAgeOption>();
     } else {
       setOption(MaxAgeOption(value));
-    }
-  }
-
-  /// Accept
-  CoapMediaType? get accept {
-    final opt = getFirstOption<AcceptOption>();
-    if (opt == null) {
-      return null;
-    }
-
-    return CoapMediaType.fromIntValue(opt.value);
-  }
-
-  set accept(final CoapMediaType? value) {
-    if (value == null) {
-      removeOptions<AcceptOption>();
-    } else {
-      setOption(AcceptOption(value.numericValue));
     }
   }
 
@@ -629,7 +576,9 @@ abstract class CoapMessage {
       elements.add(formattedOptions);
     }
 
-    elements.add('Payload: $payloadString');
+    if (payload.isNotEmpty) {
+      elements.add('Payload: $payloadString');
+    }
 
     return '\n${elements.join(',\n')}\n';
   }

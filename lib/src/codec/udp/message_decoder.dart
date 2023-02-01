@@ -9,11 +9,13 @@ import 'package:typed_data/typed_data.dart';
 
 import '../../coap_code.dart';
 import '../../coap_empty_message.dart';
+import '../../coap_media_type.dart';
 import '../../coap_message.dart';
 import '../../coap_message_type.dart';
 import '../../coap_request.dart';
 import '../../coap_response.dart';
 import '../../option/coap_option_type.dart';
+import '../../option/integer_option.dart';
 import '../../option/option.dart';
 import 'datagram_reader.dart';
 import 'message_format.dart' as message_format;
@@ -53,6 +55,9 @@ CoapMessage? deserializeUdpMessage(final Uint8Buffer data) {
   final token = _readToken(tokenLength, reader);
 
   Uint8Buffer? payload;
+  int? contentFormatValue;
+  int? acceptValue;
+
   var hasUnknownCriticalOption = false;
   final options = <Option<Object?>>[];
   // Read options
@@ -100,6 +105,18 @@ CoapMessage? deserializeUdpMessage(final Uint8Buffer data) {
         final optionType = OptionType.fromTypeNumber(currentOption);
         final optionBytes = reader.readBytes(optionLength);
         final option = optionType.parse(optionBytes);
+
+        // TODO: Refactor
+        if (option is AcceptOption && acceptValue == null) {
+          acceptValue = option.value;
+          continue;
+        }
+
+        if (option is ContentFormatOption && contentFormatValue == null) {
+          contentFormatValue = option.value;
+          continue;
+        }
+
         options.add(option);
       } on UnknownElectiveOptionException catch (_) {
         // Unknown elective options must be silently ignored
@@ -111,6 +128,8 @@ CoapMessage? deserializeUdpMessage(final Uint8Buffer data) {
       }
     }
   }
+
+  final contentFormat = CoapMediaType.fromIntValue(contentFormatValue);
 
   if (code.isRequest) {
     final method = RequestMethod.fromCoapCode(code);
@@ -127,6 +146,8 @@ CoapMessage? deserializeUdpMessage(final Uint8Buffer data) {
       payload: payload,
       hasUnknownCriticalOption: hasUnknownCriticalOption,
       hasFormatError: hasFormatError,
+      accept: CoapMediaType.fromIntValue(acceptValue),
+      contentFormat: contentFormat,
     );
   } else if (code.isResponse) {
     final responseCode = ResponseCode.fromCoapCode(code);
@@ -143,6 +164,7 @@ CoapMessage? deserializeUdpMessage(final Uint8Buffer data) {
       payload: payload,
       hasUnknownCriticalOption: hasUnknownCriticalOption,
       hasFormatError: hasFormatError,
+      contentFormat: contentFormat,
     );
   } else if (code.isEmpty) {
     return CoapEmptyMessage.fromParsed(

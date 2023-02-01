@@ -325,7 +325,7 @@ enum CoapMediaType {
     ),
   );
 
-  static CoapMediaType? fromIntValue(final int value) => _registry[value];
+  static CoapMediaType? fromIntValue(final int? value) => _registry[value];
 
   /// Parses a string-based contentType [value] and [encoding] and returns
   /// a [CoapMediaType], if a match has been found.

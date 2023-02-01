@@ -10,6 +10,7 @@
  */
 
 import 'dart:async';
+import 'dart:convert';
 import 'package:coap/coap.dart';
 import 'config/coap_config.dart';
 import 'utils.dart';
@@ -24,7 +25,7 @@ FutureOr<void> main() async {
   );
 
   // Random large payload
-  final payload = getRandomString(length: 2000);
+  final payload = utf8.encode(getRandomString(length: 2000));
 
   try {
     print('Listening to the internal request/response event stream');

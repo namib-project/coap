@@ -46,7 +46,7 @@ class DatagramWriter {
   }
 
   /// Writes a sequence of bytes to the stream
-  void writeBytes(final Uint8Buffer? bytes) {
+  void writeBytes(final Iterable<int>? bytes) {
     // Check if anything to do at all
     if (bytes == null) {
       return;
@@ -54,8 +54,8 @@ class DatagramWriter {
 
     // Are there bits left to write in buffer?
     if (_currentBitIndex < 7) {
-      for (var i = 0; i < bytes.length; i++) {
-        write(bytes[i], 8);
+      for (final byte in bytes) {
+        write(byte, 8);
       }
     } else {
       // if bit buffer is empty, call can be delegated

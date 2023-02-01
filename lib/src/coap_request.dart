@@ -12,6 +12,7 @@ import 'package:typed_data/typed_buffers.dart';
 
 import 'coap_code.dart';
 import 'coap_constants.dart';
+import 'coap_media_type.dart';
 import 'coap_message.dart';
 import 'coap_message_type.dart';
 import 'net/endpoint.dart';
@@ -27,8 +28,15 @@ import 'option/string_option.dart';
 class CoapRequest extends CoapMessage {
   /// Initializes a request message.
   /// Defaults to confirmable
-  CoapRequest(this.method, {final bool confirmable = true})
-      : super(
+  CoapRequest(
+    this.method, {
+    final bool confirmable = true,
+    super.payload,
+    super.id,
+    super.contentFormat,
+    this.accept,
+    super.maxRetransmit,
+  }) : super(
           method.coapCode,
           confirmable ? CoapMessageType.con : CoapMessageType.non,
         );
@@ -212,33 +220,143 @@ class CoapRequest extends CoapMessage {
   @override
   String toString() => '\n<<< Request Message >>>${super.toString()}';
 
+  @override
+  List<Option<Object?>> getAllOptions() {
+    final options = super.getAllOptions();
+
+    final numericAcceptValue = accept?.numericValue;
+
+    if (numericAcceptValue != null) {
+      options.add(AcceptOption(numericAcceptValue));
+    }
+
+    return options;
+  }
+
+  final CoapMediaType? accept;
+
   /// Construct a GET request.
-  factory CoapRequest.newGet({final bool confirmable = true}) =>
-      CoapRequest(RequestMethod.get, confirmable: confirmable);
+  factory CoapRequest.newGet({
+    final bool confirmable = true,
+    final int? id,
+    final int? maxRetransmit,
+  }) =>
+      CoapRequest(
+        RequestMethod.get,
+        confirmable: confirmable,
+        id: id,
+        maxRetransmit: maxRetransmit,
+      );
 
   /// Construct a POST request.
-  factory CoapRequest.newPost({final bool confirmable = true}) =>
-      CoapRequest(RequestMethod.post, confirmable: confirmable);
+  factory CoapRequest.newPost({
+    final bool confirmable = true,
+    final Iterable<int>? payload,
+    final int? id,
+    final CoapMediaType? contentFormat,
+    final CoapMediaType? accept,
+    final int? maxRetransmit,
+  }) =>
+      CoapRequest(
+        RequestMethod.post,
+        confirmable: confirmable,
+        payload: payload,
+        id: id,
+        contentFormat: contentFormat,
+        accept: accept,
+        maxRetransmit: maxRetransmit,
+      );
 
   /// Construct a PUT request.
-  factory CoapRequest.newPut({final bool confirmable = true}) =>
-      CoapRequest(RequestMethod.put, confirmable: confirmable);
+  factory CoapRequest.newPut({
+    final bool confirmable = true,
+    final Iterable<int>? payload,
+    final int? id,
+    final CoapMediaType? contentFormat,
+    final CoapMediaType? accept,
+    final int? maxRetransmit,
+  }) =>
+      CoapRequest(
+        RequestMethod.put,
+        confirmable: confirmable,
+        payload: payload,
+        id: id,
+        accept: accept,
+        contentFormat: contentFormat,
+        maxRetransmit: maxRetransmit,
+      );
 
   /// Construct a DELETE request.
-  factory CoapRequest.newDelete({final bool confirmable = true}) =>
-      CoapRequest(RequestMethod.delete, confirmable: confirmable);
+  factory CoapRequest.newDelete({
+    final bool confirmable = true,
+    final int? id,
+    final CoapMediaType? accept,
+    final int? maxRetransmit,
+  }) =>
+      CoapRequest(
+        RequestMethod.delete,
+        confirmable: confirmable,
+        id: id,
+        accept: accept,
+        maxRetransmit: maxRetransmit,
+      );
 
   /// Construct a FETCH request.
-  factory CoapRequest.newFetch({final bool confirmable = true}) =>
-      CoapRequest(RequestMethod.fetch, confirmable: confirmable);
+  factory CoapRequest.newFetch({
+    final bool confirmable = true,
+    final Iterable<int>? payload,
+    final int? id,
+    final CoapMediaType? contentFormat,
+    final CoapMediaType? accept,
+    final int? maxRetransmit,
+  }) =>
+      CoapRequest(
+        RequestMethod.fetch,
+        confirmable: confirmable,
+        payload: payload,
+        id: id,
+        accept: accept,
+        contentFormat: contentFormat,
+        maxRetransmit: maxRetransmit,
+      );
 
   /// Construct a PATCH request.
-  factory CoapRequest.newPatch({final bool confirmable = true}) =>
-      CoapRequest(RequestMethod.patch, confirmable: confirmable);
+  factory CoapRequest.newPatch({
+    final bool confirmable = true,
+    final Iterable<int>? payload,
+    final int? id,
+    final CoapMediaType? contentFormat,
+    final CoapMediaType? accept,
+    final int? maxRetransmit,
+  }) =>
+      CoapRequest(
+        RequestMethod.patch,
+        confirmable: confirmable,
+        payload: payload,
+        id: id,
+        accept: accept,
+        contentFormat: contentFormat,
+        maxRetransmit: maxRetransmit,
+      );
 
   /// Construct a iPATCH request.
-  factory CoapRequest.newIPatch({final bool confirmable = true}) =>
-      CoapRequest(RequestMethod.ipatch, confirmable: confirmable);
+  factory CoapRequest.newIPatch({
+    final bool confirmable = true,
+    final Iterable<int>? payload,
+    final int? id,
+    final CoapMediaType? contentFormat,
+    final CoapMediaType? accept,
+    final int? maxRetransmit,
+  }) =>
+      CoapRequest(
+        RequestMethod.ipatch,
+        confirmable: confirmable,
+        payload: payload,
+        id: id,
+        accept: accept,
+        contentFormat: contentFormat,
+        maxRetransmit: maxRetransmit,
+      );
 
   CoapRequest.fromParsed(
     this.method, {
@@ -249,6 +367,9 @@ class CoapRequest extends CoapMessage {
     required final Uint8Buffer? payload,
     required final bool hasUnknownCriticalOption,
     required final bool hasFormatError,
+    super.contentFormat,
+    this.accept,
+    super.maxRetransmit,
   }) : super.fromParsed(
           method.coapCode,
           type,

@@ -6,6 +6,8 @@
  * Date   : 13/04/2017
  * Copyright :  S.Hamblett
  */
+import 'dart:convert';
+
 import 'package:coap/coap.dart';
 import 'package:coap/src/coap_message.dart';
 import 'package:coap/src/codec/udp/message_decoder.dart';
@@ -148,9 +150,9 @@ void main() {
     }
 
     void testMessage(final int testNo) {
-      final CoapMessage msg = CoapRequest(RequestMethod.get)
-        ..id = 12345
-        ..setPayload('payload');
+      final CoapMessage msg =
+          CoapRequest(RequestMethod.get, payload: utf8.encode('payload'))
+            ..id = 12345;
       final data = serializeUdpMessage(msg);
       checkData(data, testNo);
       final convMsg = deserializeUdpMessage(data);
@@ -166,13 +168,14 @@ void main() {
     }
 
     void testMessageWithOptions(final int testNo) {
-      final CoapMessage msg = CoapRequest(RequestMethod.get)
+      final CoapMessage msg = CoapRequest(
+        RequestMethod.get,
+        payload: utf8.encode('payload'),
+        contentFormat: CoapMediaType.textPlain,
+      )
         ..id = 12345
-        ..setPayload('payload')
-        ..addOption(
-          ContentFormatOption(CoapMediaType.textPlain.numericValue),
-        )
         ..addOption(MaxAgeOption(30));
+      print(msg.getAllOptions());
       expect(msg.getFirstOption<ContentFormatOption>()!.value, 0);
       expect(msg.getFirstOption<MaxAgeOption>()!.value, 30);
       final data = serializeUdpMessage(msg);
@@ -183,6 +186,8 @@ void main() {
       expect(msg.type, convMsg.type);
       expect(msg.id, convMsg.id);
       expect(msg.getAllOptions().length, convMsg.getAllOptions().length);
+      print(msg.getAllOptions());
+      print(convMsg.getAllOptions());
       expect(
         leq.equals(
           msg.getAllOptions().toList(),
@@ -190,6 +195,7 @@ void main() {
         ),
         isTrue,
       );
+      print(convMsg.getAllOptions());
       expect(
         convMsg.getFirstOption<ContentFormatOption>()!.value,
         CoapMediaType.textPlain.numericValue,
@@ -202,11 +208,11 @@ void main() {
     }
 
     void testMessageWithExtendedOption(final int testNo) {
-      final CoapMessage msg = CoapRequest(RequestMethod.get)
-        ..id = 12345
-        ..addOption(ContentFormatOption(0));
+      final CoapMessage msg =
+          CoapRequest(RequestMethod.get, payload: utf8.encode('payload'))
+            ..id = 12345
+            ..addOption(ContentFormatOption(0));
       expect(msg.getFirstOption<ContentFormatOption>()!.value, 0);
-      msg.setPayload('payload');
 
       final data = serializeUdpMessage(msg);
       checkData(data, testNo);
@@ -231,15 +237,18 @@ void main() {
     }
 
     void testRequestParsing(final int testNo) {
-      final request = CoapRequest(RequestMethod.post, confirmable: false)
+      final request = CoapRequest(
+        RequestMethod.post,
+        confirmable: false,
+        contentFormat: CoapMediaType.fromIntValue(40),
+        accept: CoapMediaType.fromIntValue(40),
+      )
         ..id = 7
         ..token = (typed.Uint8Buffer()..addAll(<int>[11, 82, 165, 77, 3]))
         ..addIfMatchOpaque(typed.Uint8Buffer()..addAll(<int>[34, 239]))
         ..addIfMatchOpaque(
           typed.Uint8Buffer()..addAll(<int>[88, 12, 254, 157, 5]),
-        )
-        ..contentType = CoapMediaType.fromIntValue(40)
-        ..accept = CoapMediaType.fromIntValue(40);
+        );
 
       final bytes = serializeUdpMessage(request);
       checkData(bytes, testNo);

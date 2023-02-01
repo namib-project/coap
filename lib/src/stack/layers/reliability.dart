@@ -251,9 +251,7 @@ class _TransmissionContext {
     if (!_message.isRejected &&
         _message.isActive &&
         failedTransmissionCount <=
-            (_message.maxRetransmit != 0
-                ? _message.maxRetransmit
-                : _config.maxRetransmit)) {
+            (_message.maxRetransmit ?? _config.maxRetransmit)) {
       _message.fireRetransmitting();
       _retransmit(this);
     } else {

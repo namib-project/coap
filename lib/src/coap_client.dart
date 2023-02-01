@@ -6,6 +6,7 @@
  */
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
@@ -141,17 +142,18 @@ class CoapClient {
     final bool confirmable = true,
     final List<Option<Object?>>? options,
     final bool earlyBlock2Negotiation = false,
-    final int maxRetransmit = 0,
+    final int? maxRetransmit,
     final CoapMulticastResponseHandler? onMulticastResponse,
   }) {
-    final request = CoapRequest.newGet(confirmable: confirmable);
+    final request = CoapRequest.newGet(
+      confirmable: confirmable,
+      maxRetransmit: maxRetransmit,
+    );
     _build(
       request,
       path,
-      accept,
       options,
       earlyBlock2Negotiation,
-      maxRetransmit,
     );
     return send(request, onMulticastResponse: onMulticastResponse);
   }
@@ -159,86 +161,36 @@ class CoapClient {
   /// Sends a POST request.
   Future<CoapResponse> post(
     final String path, {
-    required final String payload,
+    final Iterable<int>? payload,
     final CoapMediaType? format,
     final CoapMediaType? accept,
     final bool confirmable = true,
     final List<Option<Object?>>? options,
     final bool earlyBlock2Negotiation = false,
-    final int maxRetransmit = 0,
+    final int? maxRetransmit,
     final CoapMulticastResponseHandler? onMulticastResponse,
   }) {
-    final request = CoapRequest.newPost(confirmable: confirmable)
-      ..setPayloadMedia(payload, format);
-    _build(
-      request,
-      path,
-      accept,
-      options,
-      earlyBlock2Negotiation,
-      maxRetransmit,
+    final request = CoapRequest.newPost(
+      confirmable: confirmable,
+      payload: payload,
+      contentFormat: format,
+      accept: accept,
+      maxRetransmit: maxRetransmit,
     );
-    return send(request, onMulticastResponse: onMulticastResponse);
-  }
 
-  /// Sends a POST request with the specified byte payload.
-  Future<CoapResponse> postBytes(
-    final String path, {
-    required final Uint8Buffer payload,
-    final CoapMediaType? format,
-    final CoapMediaType? accept,
-    final bool confirmable = true,
-    final List<Option<Object?>>? options,
-    final bool earlyBlock2Negotiation = false,
-    final int maxRetransmit = 0,
-    final CoapMulticastResponseHandler? onMulticastResponse,
-  }) {
-    final request = CoapRequest.newPost(confirmable: confirmable)
-      ..setPayloadMediaRaw(payload, format);
     _build(
       request,
       path,
-      accept,
       options,
       earlyBlock2Negotiation,
-      maxRetransmit,
-    );
-    return send(request, onMulticastResponse: onMulticastResponse);
-  }
-
-  /// Sends a PUT request.
-  Future<CoapResponse> put(
-    final String path, {
-    required final String payload,
-    final CoapMediaType? format,
-    final CoapMediaType? accept,
-    final bool confirmable = true,
-    final List<Uint8Buffer>? etags,
-    final MatchEtags matchEtags = MatchEtags.onMatch,
-    final List<Option<Object?>>? options,
-    final bool earlyBlock2Negotiation = false,
-    final int maxRetransmit = 0,
-    final CoapMulticastResponseHandler? onMulticastResponse,
-  }) {
-    final request = CoapRequest.newPut(confirmable: confirmable)
-      ..setPayloadMedia(payload, format);
-    _build(
-      request,
-      path,
-      accept,
-      options,
-      earlyBlock2Negotiation,
-      maxRetransmit,
-      etags: etags,
-      matchEtags: matchEtags,
     );
     return send(request, onMulticastResponse: onMulticastResponse);
   }
 
   /// Sends a PUT request with the specified byte payload.
-  Future<CoapResponse> putBytes(
+  Future<CoapResponse> put(
     final String path, {
-    required final Uint8Buffer payload,
+    final Iterable<int>? payload,
     final CoapMediaType? format,
     final MatchEtags matchEtags = MatchEtags.onMatch,
     final List<Uint8Buffer>? etags,
@@ -249,15 +201,19 @@ class CoapClient {
     final int maxRetransmit = 0,
     final CoapMulticastResponseHandler? onMulticastResponse,
   }) {
-    final request = CoapRequest.newPut(confirmable: confirmable)
-      ..setPayloadMediaRaw(payload, format);
+    final request = CoapRequest.newPut(
+      confirmable: confirmable,
+      payload: payload,
+      contentFormat: format,
+      accept: accept,
+      maxRetransmit: maxRetransmit,
+    );
+
     _build(
       request,
       path,
-      accept,
       options,
       earlyBlock2Negotiation,
-      maxRetransmit,
       etags: etags,
       matchEtags: matchEtags,
     );
@@ -274,14 +230,16 @@ class CoapClient {
     final int maxRetransmit = 0,
     final CoapMulticastResponseHandler? onMulticastResponse,
   }) {
-    final request = CoapRequest.newDelete(confirmable: confirmable);
+    final request = CoapRequest.newDelete(
+      confirmable: confirmable,
+      accept: accept,
+      maxRetransmit: maxRetransmit,
+    );
     _build(
       request,
       path,
-      accept,
       options,
       earlyBlock2Negotiation,
-      maxRetransmit,
     );
     return send(request, onMulticastResponse: onMulticastResponse);
   }
@@ -293,6 +251,8 @@ class CoapClient {
   /// [RFC 8132, section 2]: https://www.rfc-editor.org/rfc/rfc8132.html#section-2
   Future<CoapResponse> fetch(
     final String path, {
+    final Iterable<int>? payload,
+    final CoapMediaType? format,
     final CoapMediaType? accept,
     final bool confirmable = true,
     final List<Option<Object?>>? options,
@@ -300,14 +260,18 @@ class CoapClient {
     final int maxRetransmit = 0,
     final CoapMulticastResponseHandler? onMulticastResponse,
   }) {
-    final request = CoapRequest.newFetch(confirmable: confirmable);
+    final request = CoapRequest.newFetch(
+      confirmable: confirmable,
+      payload: payload,
+      accept: accept,
+      maxRetransmit: maxRetransmit,
+    );
+
     _build(
       request,
       path,
-      accept,
       options,
       earlyBlock2Negotiation,
-      maxRetransmit,
     );
     return send(request, onMulticastResponse: onMulticastResponse);
   }
@@ -319,7 +283,7 @@ class CoapClient {
   /// [RFC 8132, section 3]: https://www.rfc-editor.org/rfc/rfc8132.html#section-3
   Future<CoapResponse> patch(
     final String path, {
-    required final String payload,
+    final Iterable<int>? payload,
     final CoapMediaType? format,
     final CoapMediaType? accept,
     final bool confirmable = true,
@@ -330,48 +294,18 @@ class CoapClient {
     final int maxRetransmit = 0,
     final CoapMulticastResponseHandler? onMulticastResponse,
   }) {
-    final request = CoapRequest.newPatch(confirmable: confirmable)
-      ..setPayloadMedia(payload, format);
-    _build(
-      request,
-      path,
-      accept,
-      options,
-      earlyBlock2Negotiation,
-      maxRetransmit,
-      etags: etags,
-      matchEtags: matchEtags,
+    final request = CoapRequest.newPatch(
+      confirmable: confirmable,
+      accept: accept,
+      contentFormat: format,
+      maxRetransmit: maxRetransmit,
     );
-    return send(request, onMulticastResponse: onMulticastResponse);
-  }
 
-  /// Sends a PATCH request with the specified byte payload.
-  ///
-  /// See [RFC 8132, section 3].
-  ///
-  /// [RFC 8132, section 3]: https://www.rfc-editor.org/rfc/rfc8132.html#section-3
-  Future<CoapResponse> patchBytes(
-    final String path, {
-    required final Uint8Buffer payload,
-    final CoapMediaType? format,
-    final MatchEtags matchEtags = MatchEtags.onMatch,
-    final List<Uint8Buffer>? etags,
-    final CoapMediaType? accept,
-    final bool confirmable = true,
-    final List<Option<Object?>>? options,
-    final bool earlyBlock2Negotiation = false,
-    final int maxRetransmit = 0,
-    final CoapMulticastResponseHandler? onMulticastResponse,
-  }) {
-    final request = CoapRequest.newPatch(confirmable: confirmable)
-      ..setPayloadMediaRaw(payload, format);
     _build(
       request,
       path,
-      accept,
       options,
       earlyBlock2Negotiation,
-      maxRetransmit,
       etags: etags,
       matchEtags: matchEtags,
     );
@@ -385,7 +319,7 @@ class CoapClient {
   /// [RFC 8132, section 3]: https://www.rfc-editor.org/rfc/rfc8132.html#section-3
   Future<CoapResponse> iPatch(
     final String path, {
-    required final String payload,
+    final Iterable<int>? payload,
     final CoapMediaType? format,
     final CoapMediaType? accept,
     final bool confirmable = true,
@@ -396,48 +330,19 @@ class CoapClient {
     final int maxRetransmit = 0,
     final CoapMulticastResponseHandler? onMulticastResponse,
   }) {
-    final request = CoapRequest.newIPatch(confirmable: confirmable)
-      ..setPayloadMedia(payload, format);
-    _build(
-      request,
-      path,
-      accept,
-      options,
-      earlyBlock2Negotiation,
-      maxRetransmit,
-      etags: etags,
-      matchEtags: matchEtags,
+    final request = CoapRequest.newIPatch(
+      confirmable: confirmable,
+      payload: payload,
+      accept: accept,
+      contentFormat: format,
+      maxRetransmit: maxRetransmit,
     );
-    return send(request, onMulticastResponse: onMulticastResponse);
-  }
 
-  /// Sends a iPATCH request with the specified byte payload.
-  ///
-  /// See [RFC 8132, section 3].
-  ///
-  /// [RFC 8132, section 3]: https://www.rfc-editor.org/rfc/rfc8132.html#section-3
-  Future<CoapResponse> iPatchBytes(
-    final String path, {
-    required final Uint8Buffer payload,
-    final CoapMediaType? format,
-    final MatchEtags matchEtags = MatchEtags.onMatch,
-    final List<Uint8Buffer>? etags,
-    final CoapMediaType? accept,
-    final bool confirmable = true,
-    final List<Option<Object?>>? options,
-    final bool earlyBlock2Negotiation = false,
-    final int maxRetransmit = 0,
-    final CoapMulticastResponseHandler? onMulticastResponse,
-  }) {
-    final request = CoapRequest.newIPatch(confirmable: confirmable)
-      ..setPayloadMediaRaw(payload, format);
     _build(
       request,
       path,
-      accept,
       options,
       earlyBlock2Negotiation,
-      maxRetransmit,
       etags: etags,
       matchEtags: matchEtags,
     );
@@ -445,13 +350,8 @@ class CoapClient {
   }
 
   /// Observe
-  Future<CoapObserveClientRelation> observe(
-    final CoapRequest request, {
-    final int maxRetransmit = 0,
-  }) async {
-    request
-      ..observe = ObserveRegistration.register.value
-      ..maxRetransmit = maxRetransmit;
+  Future<CoapObserveClientRelation> observe(final CoapRequest request) async {
+    request.observe = ObserveRegistration.register.value;
     final responseStream = _sendWithStreamResponse(request).asBroadcastStream();
     final relation = CoapObserveClientRelation(request, responseStream);
     final resp = await _waitForResponse(request, responseStream);
@@ -474,7 +374,8 @@ class CoapClient {
     if (links.contentFormat != CoapMediaType.applicationLinkFormat) {
       return <CoapWebLink>[CoapWebLink('')];
     } else {
-      return CoapLinkFormat.parse(links.payloadString);
+      final payloadString = utf8.decode(links.payload.toList());
+      return CoapLinkFormat.parse(payloadString);
     }
   }
 
@@ -555,17 +456,12 @@ class CoapClient {
   void _build(
     final CoapRequest request,
     final String path,
-    final CoapMediaType? accept,
     final List<Option<Object?>>? options,
-    final bool earlyBlock2Negotiation,
-    final int maxRetransmit, {
+    final bool earlyBlock2Negotiation, {
     final MatchEtags matchEtags = MatchEtags.onMatch,
     final List<Uint8Buffer>? etags,
   }) {
-    request
-      ..uriPath = path
-      ..accept = accept
-      ..maxRetransmit = maxRetransmit;
+    request.uriPath = path;
     if (options != null) {
       request.addOptions(options);
     }

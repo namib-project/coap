@@ -20,8 +20,14 @@ import 'option/string_option.dart';
 /// or a separate response with type CON or NON.
 class CoapResponse extends CoapMessage {
   /// Initializes a response message.
-  CoapResponse(this.responseCode, final CoapMessageType type)
-      : super(responseCode.coapCode, type);
+  CoapResponse(
+    this.responseCode,
+    final CoapMessageType type, {
+    super.payload,
+  }) : super(
+          responseCode.coapCode,
+          type,
+        );
 
   final ResponseCode responseCode;
 
@@ -64,9 +70,10 @@ class CoapResponse extends CoapMessage {
   factory CoapResponse.createResponse(
     final CoapRequest request,
     final ResponseCode statusCode,
-    final CoapMessageType type,
-  ) =>
-      CoapResponse(statusCode, type)
+    final CoapMessageType type, {
+    final Iterable<int>? payload,
+  }) =>
+      CoapResponse(statusCode, type, payload: payload)
         ..destination = request.source
         ..token = request.token;
 
@@ -79,6 +86,7 @@ class CoapResponse extends CoapMessage {
     required final Uint8Buffer? payload,
     required final bool hasUnknownCriticalOption,
     required final bool hasFormatError,
+    super.contentFormat,
   }) : super.fromParsed(
           responseCode.coapCode,
           type,

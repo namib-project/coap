@@ -6,6 +6,7 @@
  */
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:typed_data/typed_data.dart';
@@ -95,11 +96,10 @@ class BlockwiseLayer extends BaseLayer {
             request,
             ResponseCode.requestEntityIncomplete,
             CoapMessageType.con,
-          )
-            ..addOption(
+            payload: utf8.encode('Changed Content-Format'),
+          )..addOption(
               Block1Option.fromParts(block1.num, block1.szx, m: block1.m),
-            )
-            ..setPayload('Changed Content-Format');
+            );
 
           exchange.currentResponse = error;
           super.sendResponse(exchange, error);
@@ -128,7 +128,8 @@ class BlockwiseLayer extends BaseLayer {
           _earlyBlock2Negotiation(exchange, request);
 
           // Assemble and deliver
-          final assembled = CoapRequest(request.method);
+          final payload = _assemblePayload(status);
+          final assembled = CoapRequest(request.method, payload: payload);
           _assembleMessage(status, assembled, request);
 
           exchange.request = assembled;
@@ -140,11 +141,10 @@ class BlockwiseLayer extends BaseLayer {
           request,
           ResponseCode.requestEntityIncomplete,
           CoapMessageType.con,
-        )
-          ..addOption(
+          payload: utf8.encode('Wrong block number'),
+        )..addOption(
             Block1Option.fromParts(block1.num, block1.szx, m: block1.m),
-          )
-          ..setPayload('Wrong block number');
+          );
         exchange.currentResponse = error;
         super.sendResponse(exchange, error);
       }
@@ -353,7 +353,12 @@ class BlockwiseLayer extends BaseLayer {
             ..responseBlockStatus = status;
           super.sendRequest(exchange, block);
         } else {
-          final assembled = CoapResponse(response.responseCode, response.type);
+          final payload = _assemblePayload(status);
+          final assembled = CoapResponse(
+            response.responseCode,
+            response.type,
+            payload: payload,
+          );
           _assembleMessage(status, assembled, response);
 
           // Set overall transfer RTT
@@ -387,7 +392,7 @@ class BlockwiseLayer extends BaseLayer {
   bool _requiresBlockwise(final CoapRequest request) {
     if (request.method == RequestMethod.put ||
         request.method == RequestMethod.post) {
-      return request.payloadSize > _maxMessageSize;
+      return request.payload.length > _maxMessageSize;
     }
     return false;
   }
@@ -413,18 +418,19 @@ class BlockwiseLayer extends BaseLayer {
   ) {
     final num = status.currentNUM;
     final szx = status.currentSZX;
-    final block = CoapRequest(request.method)
+
+    final currentSize = szx.decodedValue;
+    final from = num * currentSize;
+    final to = min((num + 1) * currentSize, request.payload.length);
+    final payloadSlice = request.payload.toList().getRange(from, to);
+
+    final block = CoapRequest(request.method, payload: payloadSlice)
       ..endpoint = request.endpoint
       ..setOptions(request.getAllOptions())
       ..destination = request.destination
       ..token = request.token;
 
-    final currentSize = szx.decodedValue;
-    final from = num * currentSize;
-    final to = min((num + 1) * currentSize, request.payloadSize);
-    block.payload = request.payload.getRange(from, to);
-
-    final m = to < request.payloadSize;
+    final m = to < request.payload.length;
     block.addOption(Block1Option.fromParts(num, szx, m: m));
 
     status.complete = !m;
@@ -448,6 +454,13 @@ class BlockwiseLayer extends BaseLayer {
     }
   }
 
+  // TODO(JKRhb): Move to status class
+  Iterable<int> _assemblePayload(final BlockwiseStatus status) {
+    final payload = Uint8Buffer();
+    status.blocks.forEach(payload.addAll);
+    return payload;
+  }
+
   void _assembleMessage(
     final BlockwiseStatus status,
     final CoapMessage message,
@@ -459,10 +472,6 @@ class BlockwiseLayer extends BaseLayer {
       ..source = last.source
       ..token = last.token
       ..setOptions(last.getAllOptions());
-
-    final payload = Uint8Buffer();
-    status.blocks.forEach(payload.addAll);
-    message.payload = payload;
   }
 
   BlockwiseStatus _findResponseBlockStatus(
@@ -505,16 +514,16 @@ class BlockwiseLayer extends BaseLayer {
         ..isTimedOut = true;
     }
 
-    final payloadSize = response.payloadSize;
+    final payloadSize = response.payload.length;
     final currentSize = szx.decodedValue;
     final from = num * currentSize;
     if (payloadSize > 0 && payloadSize > from) {
-      final to = min((num + 1) * currentSize, response.payloadSize);
-      final m = to < response.payloadSize;
+      final to = min((num + 1) * currentSize, payloadSize);
+      final m = to < payloadSize;
       block
         ..setBlock2(szx, num, m: m)
         // Crop payload -- do after calculation of m in case block==response
-        ..payload = response.payload.getRange(from, to)
+        ..payload = response.payload.toList().getRange(from, to)
         // Do not complete notifications
         ..last = !m && !response.hasOption<ObserveOption>();
 
@@ -553,6 +562,6 @@ class BlockwiseLayer extends BaseLayer {
     final CoapExchange exchange,
     final CoapResponse response,
   ) =>
-      response.payloadSize > _maxMessageSize ||
+      response.payload.length > _maxMessageSize ||
       exchange.responseBlockStatus != null;
 }

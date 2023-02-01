@@ -17,29 +17,29 @@ import 'option/option.dart';
 /// the MessageType ACK or RST.
 class CoapEmptyMessage extends CoapMessage {
   /// Instantiates a new empty message.
-  CoapEmptyMessage(final CoapMessageType type)
-      : super(RequestMethod.empty.coapCode, type);
+  CoapEmptyMessage(
+    final CoapMessageType type, {
+    final int? id,
+  }) : super(RequestMethod.empty.coapCode, type, id: id);
 
   /// Create a new acknowledgment for the specified message.
   /// Returns the acknowledgment.
   factory CoapEmptyMessage.newACK(final CoapMessage message) =>
-      CoapEmptyMessage(CoapMessageType.ack)
-        ..id = message.id
+      CoapEmptyMessage(CoapMessageType.ack, id: message.id)
         ..token = CoapConstants.emptyToken
         ..destination = message.source;
 
   /// Create a new reset message for the specified message.
   /// Return the reset.
   factory CoapEmptyMessage.newRST(final CoapMessage message) =>
-      CoapEmptyMessage(CoapMessageType.rst)
-        ..id = message.id
+      CoapEmptyMessage(CoapMessageType.rst, id: message.id)
         ..token = CoapConstants.emptyToken
         ..destination = message.source;
 
   /// Create a new empty message confirmable for the specified message.
   /// Return the empty
   factory CoapEmptyMessage.newCon(final CoapMessage message) =>
-      CoapEmptyMessage(CoapMessageType.con)
+      CoapEmptyMessage(CoapMessageType.con, id: message.id)
         ..token = CoapConstants.emptyToken
         ..destination = message.source;
 

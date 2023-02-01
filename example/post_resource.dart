@@ -10,6 +10,7 @@
  */
 
 import 'dart:async';
+import 'dart:convert';
 import 'package:coap/coap.dart';
 import 'config/coap_config.dart';
 
@@ -27,7 +28,7 @@ FutureOr<void> main() async {
     var response = await client.post(
       'large-create',
       options: [opt],
-      payload: 'SJHTestPost',
+      payload: utf8.encode('SJHTestPost'),
     );
     print('/large-create response status: ${response.statusCodeString}');
 

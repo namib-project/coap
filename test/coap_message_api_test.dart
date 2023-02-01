@@ -41,10 +41,10 @@ void main() {
     expect(message.isCancelled, isFalse);
     expect(message.duplicate, isFalse);
     expect(message.timestamp, isNull);
-    expect(message.maxRetransmit, 0);
+    expect(message.maxRetransmit, isNull);
     expect(message.ackTimeout, 0);
     expect(message.payload, isEmpty);
-    expect(message.payloadSize, 0);
+    expect(message.payload.length, 0);
     expect(message.payloadString, '');
   });
 
@@ -162,12 +162,13 @@ void main() {
   });
 
   test('Payload', () {
-    final message = CoapEmptyMessage(CoapMessageType.rst)
-      ..isTimedOut = true
-      ..setPayload('This is the payload');
+    final message = CoapRequest(
+      RequestMethod.post,
+      payload: utf8.encode('This is the payload'),
+    )..isTimedOut = true;
     expect(message.payload, isNotNull);
     expect(message.payloadString, 'This is the payload');
-    expect(message.payloadSize, 19);
+    expect(message.payload.length, 19);
   });
 
   test('If match', () {

@@ -20,12 +20,11 @@ FutureOr<void> main() async {
 
   print('maxRetransmit config: ${conf.maxRetransmit}');
 
-  final request = CoapRequest.newGet()..uriPath = 'doesNotExist';
-  print('maxRetransmit request: ${request.maxRetransmit} (0=config default)');
+  // Override maxRetransmit for this request
+  final request = CoapRequest.newGet(maxRetransmit: 2)
+    ..uriPath = 'doesNotExist';
 
   try {
-    // Override maxRetransmit for this request
-    request.maxRetransmit = 2;
     print('maxRetransmit altered request: ${request.maxRetransmit}');
 
     print('Sending get /doesNotExist to ${uri.host}');

@@ -10,6 +10,7 @@
  */
 
 import 'dart:async';
+import 'dart:convert';
 import 'package:coap/coap.dart';
 import 'config/coap_config.dart';
 
@@ -24,8 +25,11 @@ FutureOr<void> main() async {
 
   try {
     print('Sending put /create1 to ${uri.host}');
-    final response =
-        await client.put('create1', options: [opt], payload: 'SJHTestPut');
+    final response = await client.put(
+      'create1',
+      options: [opt],
+      payload: utf8.encode('SJHTestPut'),
+    );
     print('/create1 response status: ${response.statusCodeString}');
   } on Exception catch (e) {
     print('CoAP encountered an exception: $e');
