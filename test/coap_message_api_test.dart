@@ -27,7 +27,6 @@ void main() {
     expect(message.type, CoapMessageType.con);
     expect(message.id, null);
     expect(message.optionsLength == 0, isTrue);
-    expect(message.bindAddress, isNull);
     expect(message.token, isNull);
     expect(message.tokenString, '');
     expect(message.destination, isNull);

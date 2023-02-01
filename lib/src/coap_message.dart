@@ -96,9 +96,6 @@ abstract class CoapMessage {
 
   CoapEventBus? _eventBus = CoapEventBus(namespace: '');
 
-  /// Bind address if not using the default
-  InternetAddress? bindAddress;
-
   @internal
   set eventBus(final CoapEventBus? eventBus) => _eventBus = eventBus;
 
