@@ -11,6 +11,7 @@ import 'package:typed_data/typed_data.dart';
 
 import '../../coap_code.dart';
 import '../../coap_empty_message.dart';
+import '../../coap_media_type.dart';
 import '../../coap_message.dart';
 import '../../coap_message_type.dart';
 import '../../coap_request.dart';
@@ -66,6 +67,10 @@ CoapMessage? deserializeUdpMessage(
   final locationOptions = <Option<Object?>>[];
   final otherOptions = <Option<Object?>>[];
 
+  CoapMediaType? accept;
+  CoapMediaType? contentFormat;
+  int? maxAge;
+
   // Read options
   var currentOption = 0;
   while (reader.bytesAvailable) {
@@ -114,6 +119,12 @@ CoapMessage? deserializeUdpMessage(
 
         // TODO(JKRhb): Refactor once Dart 3 is released
         switch (option.type) {
+          case OptionType.accept:
+            accept ??= CoapMediaType.fromIntValue(option.value! as int);
+            continue;
+          case OptionType.contentFormat:
+            contentFormat ??= CoapMediaType.fromIntValue(option.value! as int);
+            continue;
           case OptionType.uriHost:
           case OptionType.uriPort:
           case OptionType.uriPath:
@@ -125,8 +136,8 @@ CoapMessage? deserializeUdpMessage(
             locationOptions.add(option);
             continue;
           case OptionType.maxAge:
-          case OptionType.accept:
-          case OptionType.contentFormat:
+            maxAge ??= option.value! as int;
+            continue;
           case OptionType.ifMatch:
           case OptionType.eTag:
           case OptionType.ifNoneMatch:
@@ -182,6 +193,8 @@ CoapMessage? deserializeUdpMessage(
       payload: payload,
       hasUnknownCriticalOption: hasUnknownCriticalOption,
       hasFormatError: hasFormatError,
+      contentFormat: contentFormat,
+      accept: accept,
     );
   } else if (code.isResponse) {
     final responseCode = ResponseCode.fromCoapCode(code);
@@ -201,6 +214,8 @@ CoapMessage? deserializeUdpMessage(
       location: location,
       hasUnknownCriticalOption: hasUnknownCriticalOption,
       hasFormatError: hasFormatError,
+      maxAge: maxAge,
+      contentFormat: contentFormat,
     );
   } else if (code.isEmpty) {
     return CoapEmptyMessage.fromParsed(

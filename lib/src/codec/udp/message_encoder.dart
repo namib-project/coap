@@ -7,7 +7,6 @@
 
 import 'dart:io';
 
-import 'package:collection/collection.dart';
 import 'package:typed_data/typed_data.dart';
 
 import '../../coap_code.dart';
@@ -53,10 +52,6 @@ Uint8Buffer serializeUdpMessage(final CoapMessage message) {
 
   var lastOptionNumber = 0;
   final options = message.getAllOptions();
-  insertionSort<Option<Object?>>(
-    options,
-    compare: (final a, final b) => a.type.compareTo(b.type),
-  );
 
   for (final opt in options) {
     if (_shouldBeSkipped(opt, message)) {

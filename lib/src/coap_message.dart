@@ -40,10 +40,8 @@ abstract class CoapMessage {
     this.code,
     this._type, {
     final Iterable<int>? payload,
-    final CoapMediaType? contentFormat,
-  }) : payload = Uint8Buffer()..addAll(payload ?? []) {
-    contentType = contentFormat;
-  }
+    this.contentFormat,
+  }) : payload = Uint8Buffer()..addAll(payload ?? []);
 
   CoapMessage.fromParsed(
     this.code,
@@ -54,6 +52,7 @@ abstract class CoapMessage {
     required final Uint8Buffer? payload,
     required this.hasUnknownCriticalOption,
     required this.hasFormatError,
+    this.contentFormat,
   }) : payload = payload ?? Uint8Buffer() {
     this.id = id;
     this.token = token;
@@ -135,10 +134,21 @@ abstract class CoapMessage {
 
   /// Gets all options of the given type.
   List<T> getOptions<T extends Option<Object?>>() =>
-      _options.whereType<T>().toList();
+      getAllOptions().whereType<T>().toList();
 
-  /// Gets a list of all options.
-  List<Option<Object?>> getAllOptions() => _options.toList();
+  /// Gets a sorted list of all options.
+  ///
+  /// Note: Sorting *must* be implemented by extending classes.
+  List<Option<Object?>> getAllOptions() {
+    final options = _options.toList();
+
+    final contentFormat = this.contentFormat;
+    if (contentFormat != null) {
+      options.add(ContentFormatOption(contentFormat.numericValue));
+    }
+
+    return options;
+  }
 
   /// Sets an option, removing all others of the option type
   void setOption<T extends Option<Object?>>(final T option) {
@@ -394,60 +404,11 @@ abstract class CoapMessage {
   }
 
   /// Content type
-  CoapMediaType? get contentType {
-    final opt = getFirstOption<ContentFormatOption>();
-    if (opt == null) {
-      return null;
-    }
-
-    return CoapMediaType.fromIntValue(opt.value);
-  }
-
-  set contentType(final CoapMediaType? value) {
-    if (value == null) {
-      removeOptions<ContentFormatOption>();
-    } else {
-      setOption(ContentFormatOption(value.numericValue));
-    }
-  }
+  final CoapMediaType? contentFormat;
 
   /// The content-format of this CoAP message,
   /// Same as ContentType, only another name.
-  CoapMediaType? get contentFormat => contentType;
-
-  set contentFormat(final CoapMediaType? value) => contentType = value;
-
-  /// The max-age of this CoAP message.
-  int? get maxAge {
-    final opt = getFirstOption<MaxAgeOption>();
-    return opt?.value;
-  }
-
-  set maxAge(final int? value) {
-    if (value == null) {
-      removeOptions<MaxAgeOption>();
-    } else {
-      setOption(MaxAgeOption(value));
-    }
-  }
-
-  /// Accept
-  CoapMediaType? get accept {
-    final opt = getFirstOption<AcceptOption>();
-    if (opt == null) {
-      return null;
-    }
-
-    return CoapMediaType.fromIntValue(opt.value);
-  }
-
-  set accept(final CoapMediaType? value) {
-    if (value == null) {
-      removeOptions<AcceptOption>();
-    } else {
-      setOption(AcceptOption(value.numericValue));
-    }
-  }
+  CoapMediaType? get contentType => contentFormat;
 
   /// Proxy uri
   Uri? get proxyUri {

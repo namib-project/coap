@@ -13,6 +13,7 @@ import 'coap_media_type.dart';
 import 'coap_message.dart';
 import 'coap_message_type.dart';
 import 'net/endpoint.dart';
+import 'option/integer_option.dart';
 import 'option/option.dart';
 import 'option/uri_converters.dart';
 
@@ -29,14 +30,19 @@ class CoapRequest extends CoapMessage {
     this.method, {
     final bool confirmable = true,
     super.payload,
-    final CoapMediaType? accept,
     super.contentFormat,
+    this.accept,
   }) : super(
           method.coapCode,
           confirmable ? CoapMessageType.con : CoapMessageType.non,
-        ) {
-    super.accept = accept;
-  }
+        );
+
+  /// Indicates which [CoapMediaType] is acceptable to the client.
+  ///
+  /// See [RFC 7252, section 5.10.4].
+  ///
+  /// [RFC 7252, section 5.10.4]: https://www.rfc-editor.org/rfc/rfc7252#section-5.10.4
+  final CoapMediaType? accept;
 
   /// The request method(code)
   final RequestMethod method;
@@ -63,8 +69,19 @@ class CoapRequest extends CoapMessage {
   final Uri uri;
 
   @override
-  List<Option<Object?>> getAllOptions() =>
-      uriToOptions(uri, destination)..addAll(super.getAllOptions());
+  List<Option<Object?>> getAllOptions() {
+    final options = super.getAllOptions()
+      ..addAll(uriToOptions(uri, destination));
+
+    final accept = this.accept;
+    if (accept != null) {
+      options.add(AcceptOption(accept.numericValue));
+    }
+
+    options.sort();
+
+    return options;
+  }
 
   Endpoint? _endpoint;
 
@@ -85,14 +102,12 @@ class CoapRequest extends CoapMessage {
   factory CoapRequest.newGet(
     final Uri uri, {
     final bool confirmable = true,
-    final Iterable<int>? payload,
     final CoapMediaType? accept,
   }) =>
       CoapRequest(
         uri,
         RequestMethod.get,
         confirmable: confirmable,
-        payload: payload,
         accept: accept,
       );
 
@@ -134,14 +149,12 @@ class CoapRequest extends CoapMessage {
   factory CoapRequest.newDelete(
     final Uri uri, {
     final bool confirmable = true,
-    final Iterable<int>? payload,
     final CoapMediaType? accept,
   }) =>
       CoapRequest(
         uri,
         RequestMethod.delete,
         confirmable: confirmable,
-        payload: payload,
         accept: accept,
       );
 
@@ -206,6 +219,8 @@ class CoapRequest extends CoapMessage {
     required final Uint8Buffer? payload,
     required final bool hasUnknownCriticalOption,
     required final bool hasFormatError,
+    this.accept,
+    super.contentFormat,
   }) : super.fromParsed(
           method.coapCode,
           type,

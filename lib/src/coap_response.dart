@@ -12,6 +12,7 @@ import 'coap_code.dart';
 import 'coap_message.dart';
 import 'coap_message_type.dart';
 import 'coap_request.dart';
+import 'option/integer_option.dart';
 import 'option/option.dart';
 import 'option/uri_converters.dart';
 
@@ -25,6 +26,8 @@ class CoapResponse extends CoapMessage {
     final CoapMessageType type, {
     final Uri? location,
     super.payload,
+    super.contentFormat,
+    this.maxAge,
   })  : location = location ?? Uri(path: '/'),
         super(responseCode.coapCode, type);
 
@@ -42,9 +45,23 @@ class CoapResponse extends CoapMessage {
   /// [RFC 7252, Section 5.8.2]: https://www.rfc-editor.org/rfc/rfc7252#section-5.8.2
   final Uri location;
 
+  /// The max-age of this CoAP response.
+  final int? maxAge;
+
   @override
-  List<Option<Object?>> getAllOptions() =>
-      locationToOptions(location)..addAll(super.getAllOptions());
+  List<Option<Object?>> getAllOptions() {
+    final options = super.getAllOptions()..addAll(locationToOptions(location));
+
+    final maxAge = this.maxAge;
+
+    if (maxAge != null) {
+      options.add(MaxAgeOption(maxAge));
+    }
+
+    options.sort();
+
+    return options;
+  }
 
   /// Status code as a string
   String get statusCodeString => code.toString();
@@ -88,12 +105,14 @@ class CoapResponse extends CoapMessage {
     final CoapMessageType type, {
     final Uri? location,
     final Iterable<int>? payload,
+    final int? maxAge,
   }) =>
       CoapResponse(
         statusCode,
         type,
         location: location,
         payload: payload,
+        maxAge: maxAge,
       )
         ..destination = request.source
         ..token = request.token;
@@ -108,6 +127,8 @@ class CoapResponse extends CoapMessage {
     required final bool hasUnknownCriticalOption,
     required final bool hasFormatError,
     final Uri? location,
+    super.contentFormat,
+    this.maxAge,
   })  : location = location ?? Uri(path: '/'),
         super.fromParsed(
           responseCode.coapCode,
