@@ -22,6 +22,7 @@ import '../../net/exchange.dart';
 import '../../net/multicast_exchange.dart';
 import '../../option/coap_block_option.dart';
 import '../../option/integer_option.dart';
+import '../../option/option.dart';
 import '../base_layer.dart';
 import '../blockwise_status.dart';
 
@@ -331,7 +332,7 @@ class BlockwiseLayer extends BaseLayer {
             ..setOptions(
               request
                   .getAllOptions()
-                  .where((final option) => !option.isUriOption),
+                  .where((final option) => option is! UriOption),
             )
             ..setOption(nextBlock)
             ..destination = response.source;
@@ -424,7 +425,7 @@ class BlockwiseLayer extends BaseLayer {
     final block = CoapRequest(request.uri, request.method, payload: payload)
       ..endpoint = request.endpoint
       ..setOptions(
-        request.getAllOptions().where((final option) => !option.isUriOption),
+        request.getAllOptions().where((final option) => option is! UriOption),
       )
       ..destination = request.destination
       ..token = request.token;
@@ -464,7 +465,7 @@ class BlockwiseLayer extends BaseLayer {
       ..source = last.source
       ..token = last.token
       ..setOptions(
-        last.getAllOptions().where((final option) => !option.isUriOption),
+        last.getAllOptions().where((final option) => option is! UriOption),
       );
 
     final payload = Uint8Buffer();

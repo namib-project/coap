@@ -67,28 +67,29 @@ class LocationPathOption extends PathOption with OscoreOptionClassE {
       : super.parse(OptionType.locationPath, bytes);
 }
 
-class UriHostOption extends StringOption with OscoreOptionClassU {
+class UriHostOption extends StringOption with UriOption, OscoreOptionClassU {
   UriHostOption(final String value) : super(OptionType.uriHost, value);
 
   UriHostOption.parse(final Uint8Buffer bytes)
       : super.parse(OptionType.uriHost, bytes);
 }
 
-class UriPathOption extends PathOption with OscoreOptionClassE {
+class UriPathOption extends PathOption with UriOption, OscoreOptionClassE {
   UriPathOption(final String value) : super(OptionType.uriPath, value);
 
   UriPathOption.parse(final Uint8Buffer bytes)
       : super.parse(OptionType.uriPath, bytes);
 }
 
-class UriQueryOption extends QueryOption with OscoreOptionClassE {
+class UriQueryOption extends QueryOption with UriOption, OscoreOptionClassE {
   UriQueryOption(final String value) : super(OptionType.uriQuery, value);
 
   UriQueryOption.parse(final Uint8Buffer bytes)
       : super.parse(OptionType.uriQuery, bytes);
 }
 
-class LocationQueryOption extends QueryOption with OscoreOptionClassE {
+class LocationQueryOption extends QueryOption
+    with LocationOption, OscoreOptionClassE {
   LocationQueryOption(final String value)
       : super(OptionType.locationQuery, value);
 
@@ -96,7 +97,8 @@ class LocationQueryOption extends QueryOption with OscoreOptionClassE {
       : super.parse(OptionType.locationQuery, bytes);
 }
 
-class ProxyUriOption extends StringOption with OscoreOptionClassU {
+class ProxyUriOption extends StringOption
+    with LocationOption, OscoreOptionClassU {
   ProxyUriOption(final String value) : super(OptionType.proxyUri, value);
 
   ProxyUriOption.parse(final Uint8Buffer bytes)

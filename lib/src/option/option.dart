@@ -3,8 +3,6 @@ import 'package:meta/meta.dart';
 import 'package:typed_data/typed_data.dart';
 
 import 'coap_option_type.dart';
-import 'integer_option.dart';
-import 'string_option.dart';
 
 /// This class describes the options of the CoAP messages.
 @immutable
@@ -88,14 +86,6 @@ abstract class Option<T> implements Comparable<Option<Object?>> {
 
   bool get valid => length >= type.minLength && length <= type.maxLength;
 
-  bool get isUriOption =>
-      this is UriHostOption ||
-      this is UriPathOption ||
-      this is UriPortOption ||
-      this is UriQueryOption;
-
-  bool get isLocationOption =>
-      this is LocationPathOption || this is LocationQueryOption;
   @override
   int compareTo(final Option<Object?> other) =>
       optionNumber - other.optionNumber;
@@ -129,3 +119,9 @@ mixin OscoreOptionClassI {}
 ///
 /// [RFC 8613, section 4.1.2]: https://www.rfc-editor.org/rfc/rfc8613.html#section-4.1.2
 mixin OscoreOptionClassU {}
+
+/// Mixin for an [Option] that can be used to construct a [Uri].
+mixin UriOption {}
+
+/// Mixin for an [Option] that can be used to construct a location [Uri].
+mixin LocationOption {}

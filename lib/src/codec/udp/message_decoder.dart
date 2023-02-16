@@ -112,13 +112,42 @@ CoapMessage? deserializeUdpMessage(
         final optionBytes = reader.readBytes(optionLength);
         final option = optionType.parse(optionBytes);
 
-        // TODO(JKRhb): Refactor
-        if (option.isUriOption) {
-          uriOptions.add(option);
-        } else if (option.isLocationOption) {
-          locationOptions.add(option);
-        } else {
-          otherOptions.add(option);
+        // TODO(JKRhb): Refactor once Dart 3 is released
+        switch (option.type) {
+          case OptionType.uriHost:
+          case OptionType.uriPort:
+          case OptionType.uriPath:
+          case OptionType.uriQuery:
+            uriOptions.add(option);
+            continue;
+          case OptionType.locationPath:
+          case OptionType.locationQuery:
+            locationOptions.add(option);
+            continue;
+          case OptionType.maxAge:
+          case OptionType.accept:
+          case OptionType.contentFormat:
+          case OptionType.ifMatch:
+          case OptionType.eTag:
+          case OptionType.ifNoneMatch:
+          case OptionType.observe:
+          case OptionType.oscore:
+          case OptionType.hopLimit:
+          case OptionType.qBlock1:
+          case OptionType.edhoc:
+          case OptionType.block2:
+          case OptionType.block1:
+          case OptionType.size2:
+          case OptionType.qBlock2:
+          case OptionType.proxyUri:
+          case OptionType.proxyScheme:
+          case OptionType.size1:
+          case OptionType.echo:
+          case OptionType.noResponse:
+          case OptionType.requestTag:
+          case OptionType.ocfAcceptContentFormatVersion:
+          case OptionType.ocfContentFormatVersion:
+            otherOptions.add(option);
         }
       } on UnknownElectiveOptionException catch (_) {
         // Unknown elective options must be silently ignored

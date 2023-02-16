@@ -197,7 +197,7 @@ class ObserveOption extends IntegerOption
       ObserveRegistration.parse(value);
 }
 
-class UriPortOption extends IntegerOption with OscoreOptionClassU {
+class UriPortOption extends IntegerOption with UriOption, OscoreOptionClassU {
   UriPortOption(final int value) : super(OptionType.uriPort, value);
 
   UriPortOption.parse(final Uint8Buffer bytes)
