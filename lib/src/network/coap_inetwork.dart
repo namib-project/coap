@@ -58,14 +58,15 @@ abstract class CoapINetwork {
   void close();
 
   /// Creates a new CoapINetwork from a given URI
-  static CoapINetwork fromUri(
-    final Uri uri, {
-    required final InternetAddress address,
+  static Future<CoapINetwork> fromUri(
+    final Uri uri,
+    final InternetAddressType addressType, {
     required final DefaultCoapConfig config,
     final String namespace = '',
     final InternetAddress? bindAddress,
     final PskCredentialsCallback? pskCredentialsCallback,
-  }) {
+  }) async {
+    final address = await _lookupHost(uri.host, addressType);
     final defaultBindAddress = address.type == InternetAddressType.IPv4
         ? InternetAddress.anyIPv4
         : InternetAddress.anyIPv6;
@@ -97,4 +98,21 @@ abstract class CoapINetwork {
         throw UnsupportedProtocolException(uri.scheme);
     }
   }
+}
+
+Future<InternetAddress> _lookupHost(
+  final String host,
+  final InternetAddressType addressType,
+) async {
+  final parsedAddress = InternetAddress.tryParse(host);
+  if (parsedAddress != null) {
+    return parsedAddress;
+  }
+
+  final addresses = await InternetAddress.lookup(host, type: addressType);
+  if (addresses.isNotEmpty) {
+    return addresses[0];
+  }
+
+  throw SocketException("Failed host lookup: '$host'");
 }

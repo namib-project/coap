@@ -705,10 +705,9 @@ class CoapClient {
       return endpoint;
     }
 
-    final destination = await _lookupHost(uri.host, addressType);
-    final socket = CoapINetwork.fromUri(
+    final socket = await CoapINetwork.fromUri(
       uri,
-      address: destination,
+      addressType,
       bindAddress: bindAddress,
       config: _config,
       namespace: _eventBus.namespace,
@@ -731,23 +730,6 @@ class CoapClient {
     await _lock.synchronized(() async {
       request.endpoint = await _initializeEndpoint();
     });
-  }
-
-  Future<InternetAddress> _lookupHost(
-    final String host,
-    final InternetAddressType addressType,
-  ) async {
-    final parsedAddress = InternetAddress.tryParse(host);
-    if (parsedAddress != null) {
-      return parsedAddress;
-    }
-
-    final addresses = await InternetAddress.lookup(host, type: addressType);
-    if (addresses.isNotEmpty) {
-      return addresses[0];
-    }
-
-    throw SocketException("Failed host lookup: '$host'");
   }
 
   /// Wait for a response.
