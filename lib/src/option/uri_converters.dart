@@ -8,6 +8,7 @@ import 'integer_option.dart';
 import 'option.dart';
 import 'string_option.dart';
 
+/// Enumeration representing the standardized CoAP URI schemes.
 enum CoapUriScheme {
   coap('coap', 5683),
   coaps('coaps', 5684),
@@ -17,16 +18,23 @@ enum CoapUriScheme {
   coapsWs('coaps+ws', 443),
   ;
 
+  /// Constructs a new [CoapUriScheme] enum value.
   const CoapUriScheme(this.uriScheme, this.defaultPort);
 
+  /// The URI scheme corresponding with this [CoapUriScheme] value.
   final String uriScheme;
 
+  /// The default port number corresponding with this [CoapUriScheme] value.
   final int defaultPort;
 
   static final _registry = Map.fromEntries(
     values.map((final value) => MapEntry(value.uriScheme, value)),
   );
 
+  /// Parses a [uriScheme] and returns the corresponding [CoapUriScheme] enum
+  /// value.
+  ///
+  /// If the [uriScheme] is unknown or [Null], a [FormatException] is thrown.
   static CoapUriScheme parse(final String? uriScheme) {
     final parsedScheme = _registry[uriScheme];
 
@@ -39,13 +47,25 @@ enum CoapUriScheme {
     return parsedScheme;
   }
 
-  static bool usesDefaultPort(final String? scheme, final int port) {
-    final defaultPort = CoapUriScheme.parse(scheme).defaultPort;
+  static const _emptyPort = 0;
 
-    // 0 is included in this list since the CoAP URI schemes are not supported
-    // by the Uri class. Therefore, a missing port leads to a return value
-    // of 0 for the related URI schemes.
-    final defaultPorts = [0, defaultPort];
+  /// Returns a [List] of ports that represent the default port for this
+  /// [CoapUriScheme].
+  ///
+  /// 0 is included in this list since the CoAP URI schemes are not supported
+  /// by the [Uri] class.
+  /// Therefore, a missing port leads to a return value of 0 for the related URI
+  /// schemes.
+  List<int> get _defaultPorts => [_emptyPort, defaultPort];
+
+  /// Determines if the given [port] is the default for the given CoAP URI
+  /// [scheme].
+  ///
+  /// If the [scheme] is unknown or [Null], this method will throw a
+  /// [FormatException].
+  static bool usesDefaultPort(final String? scheme, final int port) {
+    final defaultPorts = CoapUriScheme.parse(scheme)._defaultPorts;
+
     return defaultPorts.contains(port);
   }
 }
