@@ -8,34 +8,47 @@ import 'integer_option.dart';
 import 'option.dart';
 import 'string_option.dart';
 
-// TODO(JKRhb): Consider turning this into an enhanced enum.
-int? _defaultPortFromScheme(final String? scheme) {
-  switch (scheme) {
-    case 'coap':
-      return 5683;
-    case 'coaps':
-      return 5684;
-    case 'coap+tcp':
-      return 5683;
-    case 'coaps+tcp':
-      return 5684;
-    case 'coap+ws':
-      return 80;
-    case 'coaps+ws':
-      return 443;
+enum CoapUriScheme {
+  coap('coap', 5683),
+  coaps('coaps', 5684),
+  coapTcp('coap+tcp', 5683),
+  coapsTcp('coaps+tcp', 5684),
+  coapWs('coap+ws', 80),
+  coapsWs('coaps+ws', 443),
+  ;
+
+  const CoapUriScheme(this.uriScheme, this.defaultPort);
+
+  final String uriScheme;
+
+  final int defaultPort;
+
+  static final _registry = Map.fromEntries(
+    values.map((final value) => MapEntry(value.uriScheme, value)),
+  );
+
+  static CoapUriScheme parse(final String? uriScheme) {
+    final parsedScheme = _registry[uriScheme];
+
+    if (parsedScheme == null) {
+      throw FormatException(
+        'Provided request URI scheme $uriScheme is not allowed.',
+      );
+    }
+
+    return parsedScheme;
   }
 
-  return null;
-}
+  static bool usesDefaultPort(final String? scheme, final int port) {
+    final defaultPort = CoapUriScheme.parse(scheme).defaultPort;
 
-bool _isSupportedUriScheme(final String scheme) => const [
-      'coap',
-      'coaps',
-      'coap+tcp',
-      'coaps+tcp',
-      'coap+ws',
-      'coaps+ws',
-    ].contains(scheme);
+    // 0 is included in this list since the CoAP URI schemes are not supported
+    // by the Uri class. Therefore, a missing port leads to a return value
+    // of 0 for the related URI schemes.
+    final defaultPorts = [0, defaultPort];
+    return defaultPorts.contains(port);
+  }
+}
 
 /// Converts a list of [Option]s to a [Uri] of a provided [scheme] as specified
 /// in [RFC 7252, section 6.5].
@@ -62,7 +75,8 @@ Uri optionsToUri(
 
     if (option is UriPortOption) {
       final optionValue = option.value;
-      if (_defaultPortFromScheme(scheme) != optionValue) {
+
+      if (!CoapUriScheme.usesDefaultPort(scheme, optionValue)) {
         port = optionValue;
       }
 
@@ -114,19 +128,14 @@ Uri optionsToUri(
 /// [RFC 7252, section 6.4]: https://www.rfc-editor.org/rfc/rfc7252.html#section-6.4
 List<Option<Object?>> uriToOptions(
   final Uri uri,
-  final InternetAddress? destinationAddress,
-) {
+  final InternetAddress? destinationAddress, {
+  final bool includePort = false,
+  final bool includeHost = false,
+}) {
   final options = <Option<Object?>>[];
 
   if (!uri.isAbsolute) {
     throw FormatException('Provided request URI $uri is not absolute.');
-  }
-
-  final scheme = uri.scheme;
-  if (!_isSupportedUriScheme(scheme)) {
-    throw FormatException(
-      'Provided request URI scheme $scheme is not allowed.',
-    );
   }
 
   if (uri.hasFragment) {
@@ -136,14 +145,12 @@ List<Option<Object?>> uriToOptions(
   }
 
   final host = uri.host;
-  if (host != destinationAddress?.address) {
+  if (includeHost || host != destinationAddress?.address) {
     options.add(UriHostOption(host));
   }
 
-  final port = uri.port;
-  final defaultPorts = [0, _defaultPortFromScheme(scheme)];
-  if (!defaultPorts.contains(port)) {
-    options.add(UriPortOption(port));
+  if (includePort) {
+    options.add(UriPortOption(uri.port));
   }
 
   options
