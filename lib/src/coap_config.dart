@@ -78,6 +78,12 @@ abstract class DefaultCoapConfig {
   /// Whether OpenSSL should be used with trusted Root Certificates.
   bool get dtlsWithTrustedRoots => true;
 
+  String? get clientCertificateFileName => null;
+
+  String? get clientKeyFileName => null;
+
+  final bool verifyPrivateKey = false;
+
   /// List of custom root certificates to use with OpenSSL.
   List<Uint8List> get rootCertificates => const [];
 

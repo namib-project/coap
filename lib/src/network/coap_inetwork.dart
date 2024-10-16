@@ -92,6 +92,9 @@ abstract class CoapINetwork {
           libCrypto: config.libCryptoInstance,
           libSsl: config.libSslInstance,
           hostName: uri.host,
+          clientKeyFileName: config.clientKeyFileName,
+          clientCertificateFileName: config.clientCertificateFileName,
+          verifyPrivateKey:config.verifyPrivateKey,
         );
       default:
         throw UnsupportedProtocolException(uri.scheme);

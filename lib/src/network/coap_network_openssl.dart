@@ -65,6 +65,9 @@ class CoapNetworkUDPOpenSSL extends CoapNetworkUDP {
     final DynamicLibrary? libSsl,
     final DynamicLibrary? libCrypto,
     final String? hostName,
+    this.clientCertificateFileName,
+    this.clientKeyFileName,
+    this.verifyPrivateKey = false,
   })  : _ciphers = ciphers,
         _verify = verify,
         _withTrustedRoots = withTrustedRoots,
@@ -93,6 +96,12 @@ class CoapNetworkUDPOpenSSL extends CoapNetworkUDP {
   final DynamicLibrary? _libCrypto;
 
   final String? _hostname;
+
+  final String? clientCertificateFileName;
+
+  final String? clientKeyFileName;
+
+  final bool verifyPrivateKey;
 
   @override
   void send(final CoapMessage coapMessage) {
@@ -132,6 +141,9 @@ class CoapNetworkUDPOpenSSL extends CoapNetworkUDP {
       rootCertificates: _rootCertificates,
       ciphers: _ciphers,
       pskCredentialsCallback: _openSslPskCallback,
+      clientKeyFileName: clientKeyFileName,
+      clientCertificateFileName: clientCertificateFileName,
+      verifyPrivateKey: verifyPrivateKey,
     );
 
     try {
