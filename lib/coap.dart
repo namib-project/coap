@@ -7,6 +7,8 @@
 
 library coap;
 
+export 'package:dtls2/dtls2.dart' show ClientCertificate, ClientPrivateKey;
+
 /// Pre-defined configs
 export 'config/coap_config_all.dart';
 export 'config/coap_config_default.dart';

@@ -65,8 +65,8 @@ class CoapNetworkUDPOpenSSL extends CoapNetworkUDP {
     final DynamicLibrary? libSsl,
     final DynamicLibrary? libCrypto,
     final String? hostName,
-    this.clientCertificateFileName,
-    this.clientKeyFileName,
+    this.clientCertificate,
+    this.clientPrivateKey,
     this.verifyPrivateKey = false,
   })  : _ciphers = ciphers,
         _verify = verify,
@@ -97,9 +97,9 @@ class CoapNetworkUDPOpenSSL extends CoapNetworkUDP {
 
   final String? _hostname;
 
-  final String? clientCertificateFileName;
+  final ClientCertificate? clientCertificate;
 
-  final String? clientKeyFileName;
+  final ClientPrivateKey? clientPrivateKey;
 
   final bool verifyPrivateKey;
 
@@ -141,8 +141,8 @@ class CoapNetworkUDPOpenSSL extends CoapNetworkUDP {
       rootCertificates: _rootCertificates,
       ciphers: _ciphers,
       pskCredentialsCallback: _openSslPskCallback,
-      clientKeyFileName: clientKeyFileName,
-      clientCertificateFileName: clientCertificateFileName,
+      clientPrivateKey: clientPrivateKey,
+      clientCertificate: clientCertificate,
       verifyPrivateKey: verifyPrivateKey,
     );
 

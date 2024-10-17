@@ -7,6 +7,7 @@
 
 import 'dart:typed_data';
 import 'dart:ffi';
+import 'package:dtls2/dtls2.dart';
 
 import 'coap_constants.dart';
 import 'deduplication/deduplicator_factory.dart';
@@ -78,9 +79,9 @@ abstract class DefaultCoapConfig {
   /// Whether OpenSSL should be used with trusted Root Certificates.
   bool get dtlsWithTrustedRoots => true;
 
-  String? get clientCertificateFileName => null;
+  ClientCertificate? get clientCertificate => null;
 
-  String? get clientKeyFileName => null;
+  ClientPrivateKey? get clientPrivateKey => null;
 
   final bool verifyPrivateKey = false;
 
