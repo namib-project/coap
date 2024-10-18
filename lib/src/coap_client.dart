@@ -97,10 +97,14 @@ class CoapClient {
     this.bindAddress,
     final PskCredentialsCallback? pskCredentialsCallback,
     final DefaultCoapConfig? config,
+    final Duration initTimeout = const Duration(seconds: 10),
   })  : _config = config ?? CoapConfigDefault(),
-        _pskCredentialsCallback = pskCredentialsCallback {
+        _pskCredentialsCallback = pskCredentialsCallback,
+        _initTimeout = initTimeout {
     _eventBus = CoapEventBus(namespace: hashCode.toString());
   }
+
+  final Duration _initTimeout;
 
   /// Address type used for DNS lookups.
   final InternetAddressType addressType;
@@ -664,6 +668,7 @@ class CoapClient {
           config: _config,
           namespace: _eventBus.namespace,
           pskCredentialsCallback: _pskCredentialsCallback,
+          initTimeout: _initTimeout,
         );
         await socket.init();
         _endpoint = Endpoint(socket, _config, namespace: _eventBus.namespace);

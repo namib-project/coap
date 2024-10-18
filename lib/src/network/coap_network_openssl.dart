@@ -68,6 +68,7 @@ class CoapNetworkUDPOpenSSL extends CoapNetworkUDP {
     this.clientCertificate,
     this.clientPrivateKey,
     this.verifyPrivateKey = false,
+    super.initTimeout,
   })  : _ciphers = ciphers,
         _verify = verify,
         _withTrustedRoots = withTrustedRoots,
@@ -152,7 +153,7 @@ class CoapNetworkUDPOpenSSL extends CoapNetworkUDP {
         port,
         context,
         hostname: _hostname,
-        timeout: CoapINetwork.initTimeout,
+        timeout: initTimeout,
       );
     } on Exception {
       await close();
@@ -188,7 +189,7 @@ class CoapNetworkUDPOpenSSL extends CoapNetworkUDP {
           return;
         }
 
-        Timer.periodic(CoapINetwork.reinitPeriod, (final timer) async {
+        Timer.periodic(reinitPeriod, (final timer) async {
           try {
             await init();
             timer.cancel();

@@ -14,13 +14,14 @@ import '../event/coap_event_bus.dart';
 import 'coap_inetwork.dart';
 
 /// UDP network
-class CoapNetworkUDP implements CoapINetwork {
+class CoapNetworkUDP extends CoapINetwork {
   /// Initialize with an address and a port
   CoapNetworkUDP(
     this.address,
     this.port,
     this.bindAddress, {
     final String namespace = '',
+    super.initTimeout,
   }) : eventBus = CoapEventBus(namespace: namespace);
 
   @override

@@ -15,7 +15,7 @@ import '../event/coap_event_bus.dart';
 import 'coap_inetwork.dart';
 
 /// TCP network
-class CoapNetworkTCP implements CoapINetwork {
+class CoapNetworkTCP extends CoapINetwork {
   /// Initialize with an address and a port
   CoapNetworkTCP(
     this.address,
@@ -24,6 +24,7 @@ class CoapNetworkTCP implements CoapINetwork {
     this.isTls = false,
     final SecurityContext? tlsContext,
     final String namespace = '',
+    super.initTimeout,
   })  : eventBus = CoapEventBus(namespace: namespace),
         _tlsContext = tlsContext;
 
@@ -75,14 +76,14 @@ class CoapNetworkTCP implements CoapINetwork {
         address,
         port,
         context: _tlsContext,
-        timeout: CoapINetwork.initTimeout,
+        timeout: initTimeout,
       );
     } else {
       _socket = await Socket.connect(
         address,
         port,
         sourceAddress: bindAddress,
-        timeout: CoapINetwork.initTimeout,
+        timeout: initTimeout,
       );
     }
     _receive();
@@ -109,7 +110,7 @@ class CoapNetworkTCP implements CoapINetwork {
       // Socket stream is done and can no longer be listened to
       onDone: () {
         isClosed = true;
-        Timer.periodic(CoapINetwork.reinitPeriod, (final timer) async {
+        Timer.periodic(reinitPeriod, (final timer) async {
           try {
             await init();
             timer.cancel();

@@ -30,11 +30,15 @@ class UnsupportedProtocolException implements Exception {
 /// Abstract networking class, allows different implementations for
 /// UDP, TCP, test etc.
 abstract class CoapINetwork {
+  CoapINetwork({
+    final Duration? initTimeout,
+  }) : initTimeout = initTimeout ?? const Duration(seconds: 10);
+
   /// The initialization timeout
-  static const Duration initTimeout = Duration(seconds: 10);
+  final Duration initTimeout;
 
   /// The reinit period for open connections
-  static Duration reinitPeriod = initTimeout + const Duration(seconds: 2);
+  Duration get reinitPeriod => initTimeout + const Duration(seconds: 2);
 
   /// The local address
   InternetAddress get bindAddress;
@@ -65,6 +69,7 @@ abstract class CoapINetwork {
     final String namespace = '',
     final InternetAddress? bindAddress,
     final PskCredentialsCallback? pskCredentialsCallback,
+    final Duration? initTimeout,
   }) {
     final defaultBindAddress = address.type == InternetAddressType.IPv4
         ? InternetAddress.anyIPv4
@@ -77,6 +82,7 @@ abstract class CoapINetwork {
           port ?? config.defaultPort,
           bindAddress ?? defaultBindAddress,
           namespace: namespace,
+          initTimeout: initTimeout,
         );
       case CoapConstants.secureUriScheme:
         return CoapNetworkUDPOpenSSL(
@@ -95,6 +101,7 @@ abstract class CoapINetwork {
           clientPrivateKey: config.clientPrivateKey,
           clientCertificate: config.clientCertificate,
           verifyPrivateKey: config.verifyPrivateKey,
+          initTimeout: initTimeout,
         );
       default:
         throw UnsupportedProtocolException(uri.scheme);
